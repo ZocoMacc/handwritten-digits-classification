@@ -1,6 +1,6 @@
 # Linear Models for Handwritten Digits Classification
 
-Implementation of binary logistic regression and multi-class logisitc regression models on a partial dataset from MNIST (training and test data provided).
+Implementation of **binary logistic regression** and **multi-class logisitc regression** models on a partial dataset from MNIST (training and test data provided).
 
 ### Specifications
 The model will take a 16 × 16 image of handwritten digits as inputs and classify the image into different classes.
