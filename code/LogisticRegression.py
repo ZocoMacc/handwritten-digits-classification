@@ -34,7 +34,7 @@ class logistic_regression(object):
 
             # Compute gradient for entire dataset
             for i in range(n_samples):
-                # Accumulate gradient of ech sample
+                # Accumulate gradient of each sample
                 batch_grad += self._gradient(X[i], y[i])
 
             # Average the gradient (divide sum by N)
@@ -60,7 +60,41 @@ class logistic_regression(object):
             self: Returns an instance of self.
         """
 		### YOUR CODE HERE
+
+        # Get number of features and number of samples
+        n_samples, n_features = X.shape
         
+        # Initialize weights to 0
+        self.W = np.zeros(n_features)
+
+        # Run miniBGD for a fixed number of epochs (max_iter iterations)
+        for _ in range(self.max_iter):
+            # Shuffle samples before each epoch
+            indices = np.arange(n_samples)
+            np.random.shuffle(indices)
+            X_shuffled = X[indices]
+            y_shuffled = y[indices]
+
+            # Compute gradient in batches of the dataset of size 'batch_size'
+            for start_idx in range(0, n_samples, batch_size):
+                # Handle the last batch (can be smaller than 'batch_size')
+                end_idx = min(start_idx + batch_size, n_samples)    # ensures we don't go out of bounds
+
+                # Slice the mini batch
+                X_batch = X_shuffled[start_idx:end_idx]
+                y_batch = y_shuffled[start_idx:end_idx]
+                current_batch_size = end_idx - start_idx    # in case it changes at the end
+
+                # Compute gradient for the current mini batch
+                batch_grad = np.zeros(n_features)
+                for i in range(current_batch_size):
+                    batch_grad += self._gradient(X_batch[i], y_batch[i])
+
+                # Average the gradient (divide sum by current batch size)
+                batch_grad /= current_batch_size
+
+                # Update weights
+                self.W -= self.learning_rate * batch_grad
 
 		### END YOUR CODE
         return self
