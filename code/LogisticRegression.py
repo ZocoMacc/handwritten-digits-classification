@@ -111,6 +111,26 @@ class logistic_regression(object):
         """
 		### YOUR CODE HERE
 
+        # Get number of features and number of samples
+        n_samples, n_features = X.shape
+        
+        # Initialize weights to 0
+        self.W = np.zeros(n_features)
+
+        # Run SGD for a fixed number of epochs (max_iter iterations)
+        for _ in range(self.max_iter):
+            # Shuffle samples before each epoch
+            indices = np.arange(n_samples)
+            np.random.shuffle(indices)
+
+            # Iterate through each individual sample
+            for i in indices:
+                # Compute gradient for a single sample
+                single_grad = self._gradient(X[i], y[i])
+
+                # Update weights
+                self.W -= self.learning_rate * single_grad
+
 		### END YOUR CODE
         return self
 
