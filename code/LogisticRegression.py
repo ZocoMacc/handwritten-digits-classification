@@ -185,6 +185,21 @@ class logistic_regression(object):
         """
 		### YOUR CODE HERE
 
+        # Compute the linear signal s = w^T * x
+        s = np.dot(X, self.W)
+
+        # Compute P(y=1|x) using the sigmoid function
+        prob_pos = 1 / (1 + np.exp(-s))
+
+        # Compute P(y=-1|x)
+        prob_neg = 1 - prob_pos
+
+        # Stack probabilities into a matrix of shape [n_samples, 2]
+        preds_proba = np.column_stack((prob_neg, prob_pos))
+            # Each sample has a -1 (column 0) and +1 (column 1) probability
+        
+        return preds_proba
+    
 		### END YOUR CODE
 
 
