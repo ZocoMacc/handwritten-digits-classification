@@ -24,6 +24,27 @@ class logistic_regression(object):
 
 		### YOUR CODE HERE
 
+        # Initialize weights to 0
+        self.W = np.zeros(n_features)
+
+        # Run BGD for a fixed number of epochs (max_iter iterations)
+        for _ in range(self.max_iter):
+            # Initialize a gradient accumualtor 
+            batch_grad = np.zeros(n_features)
+
+            # Compute gradient for entire dataset
+            for i in range(n_samples):
+                # Accumulate gradient of ech sample
+                batch_grad += self._gradient(X[i], y[i])
+
+            # Average the gradient (divide sum by N)
+            batch_grad /= n_samples
+
+            # Update weights
+            self.W -= self.learning_rate * batch_grad  
+                # taking a step of size n (learning rate) in the direction of the negative gradient (-v)
+                # w(t + 1) = w(t) - nv
+
 		### END YOUR CODE
         return self
 
@@ -39,6 +60,7 @@ class logistic_regression(object):
             self: Returns an instance of self.
         """
 		### YOUR CODE HERE
+        
 
 		### END YOUR CODE
         return self
@@ -72,6 +94,18 @@ class logistic_regression(object):
         """
 		### YOUR CODE HERE
 
+        # Gradient formula: (-yx) / (1 + e^{yw^Tx})
+        # Compute the exponent term: y * (w^T * x)  # np.dot computes the dot product
+        exponent = _y * np.dot(self.W, _x)          # self.W is the weight vector (w)
+
+        # Compute coefficient of x: -y / (1 + e^(exponent))
+        coeff = -_y / (1 + np.exp(exponent))         # y is an integer so no vector multiplication yet
+
+        # Multiply by vector _x to get the gradient vector
+        _g = coeff * _x
+        
+        return _g
+    
 		### END YOUR CODE
 
     def get_params(self):
