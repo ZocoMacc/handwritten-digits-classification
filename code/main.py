@@ -270,9 +270,12 @@ def main():
 	# Convert labels to -1 and 1
 	test_y[test_y == 2] = -1
 
-	# Evaluate the best model
-	test_acc = best_logisticR.score(test_X, test_y)
-	print(f"Final Test Accuracy: {test_acc}")
+	# Evaluate the 'best model'
+	if best_logisticR is not None:
+		test_accuracy = best_logisticR.score(test_X, test_y)
+		print(f"Test Accuracy: {test_accuracy}")
+	else:
+		print("Error: No best model was selected during validation.")
 
 	### END YOUR CODE
 
