@@ -151,6 +151,19 @@ class logistic_regression_multiclass(object):
         """
 		### YOUR CODE HERE
 
+        # Compute the linear signal s = w^T * x (for all classes)
+        s = np.dot(X, self.W)
+            # (n_samples, n_features) @ (n_features, k) -> (n_samples, k)
+
+        # Determine the predicted class (pick index of the highest score)
+            # Note: softmax is monotonic so the class with the highest probability
+            # will be the class with the highest linear score (no need to compute softmax)
+        preds = np.argmax(s, axis=1)
+            # argmax over axis=1 returns an integer label in {0,...,k-1} 
+            # (finds max across k classe)
+
+        return preds
+
 		### END YOUR CODE
 
 
