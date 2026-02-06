@@ -35,6 +35,46 @@ class logistic_regression_multiclass(object):
 
 		### YOUR CODE HERE
 
+        # Get number of samples and number of features
+        n_samples, n_features = X.shape
+
+        # Initialize weights matrix to 0
+        self.W = np.zeros((n_features, self.k))
+
+        # Convert labels to one-hot vectors
+        y_one_hot = np.zeros((n_samples, self.k))       # matrix of 0s of shape (n_samples, k)
+        y_one_hot[np.arrange(n_samples), labels] = 1    # set index of label to 1
+
+        # Run miniBGD for a fized number of epochs (max_iter iterations)
+        for _ in range(self.max_iter):
+            # Shuffle samples before each epoch
+            indices = np.random.permutation(n_samples)  # trying permutation
+            X_shuffled = X[indices]
+            y_shuffled = y_one_hot[indices]
+
+            # Compute gradient in batches of the dataset of size 'batch_size'
+            for start_idx in range(0, n_samples, batch_size):
+                # Handle the last batch (can be smaller than 'batch_size')
+                end_idx = min(start_idx + batch_size, n_samples)    # ensures we don't go out of bounds
+
+                # Slice the mini batch
+                X_batch = X_shuffled[start_idx:end_idx]
+                y_batch = y_shuffled[start_idx:end_idx]
+                current_batch_size = end_idx - start_idx        # in case it changes at the end
+
+                # Compute gradient for the current mini batch
+                batch_grad = np.zeros((n_features, self.k))     # nitialized a zero gradient matrix
+                for i in range(current_batch_size):
+                    batch_grad += self._gradient(X_batch[i], y_batch[i])
+
+                # Average the gradient (divide sum by current batch size)
+                batch_grad /= current_batch_size
+
+                # Update weights
+                self.W -= self.learning_rate * batch_grad       # shape: (n_features, self.k)
+
+        return self
+
 		### END YOUR CODE
     
 
@@ -52,6 +92,19 @@ class logistic_regression_multiclass(object):
         """
 		### YOUR CODE HERE
 
+        # Assumed self.W to be shape (n_features, n_classes)
+        # Compute the Softmax probabilities
+        probs = self.softmax(_x)
+
+        # Compute the error term (prediction prob - target)
+        error = probs - _y
+            # probs is the vector of class probabilities
+        
+        # Compute the gradient (outer product of the input x and the error vector)
+        _g = np.outer(_x, error)    # shape: (n_features, k)
+
+        return _g
+
 		### END YOUR CODE
     
     def softmax(self, x):
@@ -59,6 +112,19 @@ class logistic_regression_multiclass(object):
         ### You must implement softmax by youself, otherwise you will not get credits for this part.
 
 		### YOUR CODE HERE
+
+        # Compute linear term: s = w^t * x (matrix multiplication)
+        s = x @ self.W       
+            # (n_samples, n_features) @ (n_features, k) -> (n_samples, k)
+
+        # Stabilize (prevents overflow and made the model predict faster for me)
+        s = s - np.max(s)
+
+        # Softmax function: exp(s) / sum(exp(s)), where s = w^t * x
+        exp_s = np.exp(s)           # = e^s
+        soft_probs = exp_s / np.sum(exp_s)
+
+        return soft_probs
 
 		### END YOUR CODE
     
