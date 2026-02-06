@@ -179,5 +179,15 @@ class logistic_regression_multiclass(object):
         """
 		### YOUR CODE HERE
 
+        # Predict labesl using the trained model
+        preds = self.predict(X)
+
+        # Compare predictions to true labels
+        score = np.mean(preds == labels)
+            # converts boolean to 1 and 0, then gets the average
+            # gives a measure of accuracy
+
+        return score
+
 		### END YOUR CODE
 
