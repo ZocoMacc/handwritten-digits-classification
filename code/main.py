@@ -97,11 +97,12 @@ def visualize_result(X, y, W):
         # Vertical-ish boundary: w0 + w1*x1 = 0
 		if abs(w1) > eps:
 			x1_boundary = -w0 / w1
-			plt.axvline(x=x1_boundary, linestyle='--', label='Decision boundary')
+			# Plot the vertical decision boundary
+			plt.axvline(x=x1_boundary, color='green', linewidth=2, linestyle='--', label='Decision boundary')
 	else:
 		x2_values = -(w0 + w1 * x1_values) / w2
 		# Plot the decision boundary
-		plt.plot(x1_values, x2_values, linestyle='--', label='Decision boundary')
+		plt.plot(x1_values, x2_values, color='green', linewidth=2, linestyle='--', label='Decision boundary')
 
 	# Add labels, legend, and save (Styling)
 	plt.xlabel('Symmetry')
@@ -200,30 +201,42 @@ def main():
 	# Explore different hyper-parameters.
 	### YOUR CODE HERE
 
-	# Define a search space
+	# Define a search space (list of hyperparameters)
 	learning_rates = [0.01, 0.05, 0.1, 0.5, 1.0]
-	best_acc = 0			# Validation accuracy
+	training_methods = ['BGD', 'SGD', 'MiniBGD']
+
+	best_acc = -1			# Validation accuracy
 	best_logisticR = None	
+	best_params = {}
+
 
 	print("--- Hyperparemeter Tuning ---")
-	# Iterate through hyperparameters to find the best model
-	for lr in learning_rates:
-		# Initialize model
-		model = logistic_regression(learning_rate=lr, max_iter=1000)
+    # Loop through each combination
+	for method in training_methods:
+		for lr in learning_rates:
+            # Initialize a new model for each attempt
+            # Note: You might need to increase max_iter for small learning rates
+			model = logistic_regression(learning_rate=lr, max_iter=1000)
+            
+            # Train using the specific method
+			if method == 'BGD':
+				model.fit_BGD(train_X, train_y)
+			elif method == 'SGD':
+				model.fit_SGD(train_X, train_y)
+			elif method == 'MiniBGD':
+				model.fit_miniBGD(train_X, train_y, batch_size=20)
 
-		# Train on training set (using BGD first)
-		model.fit_BGD(train_X, train_y)
+            # Evaluate on the validation set (NOT TEST SET)
+			val_acc = model.score(valid_X, valid_y)
+			print(f"Method: {method}, LR: {lr}, Val Accuracy: {val_acc}")
 
-		# Evaluate on validation set (NOT TEST SET)
-		val_acc = model.score(valid_X, valid_y)
-		print(f"Learning rate: {lr}, Validation accuracy: {val_acc}")
+            # Keep the best model
+			if val_acc > best_acc:
+				best_acc = val_acc
+				best_logisticR = model
+				best_params = {'method': method, 'lr': lr}
 
-		# Keep the best model
-		if val_acc > best_acc:
-			best_acc = val_acc
-			best_logisticR = model
-
-	print(f"Best validation accuracy: {best_acc} with LR: {best_logisticR.learning_rate}")
+	print(f"\nBest Model: {best_params} with Accuracy: {best_acc}")
 
 	### END YOUR CODE
 
@@ -240,26 +253,26 @@ def main():
 	# Use the 'best' model above to do testing. Note that the test data should be loaded and processed in the same way as the training data.
 	### YOUR CODE HERE
 
-	# print("--- Testing ---")
-	# # Load the test data from file
-	# raw_test_data, test_labels = load_data(os.path.join(data_dir, test_filename))
+	print("--- Testing ---")
+	# Load the test data from file
+	raw_test_data, test_labels = load_data(os.path.join(data_dir, test_filename))
 
-	# # Extract features (bias, symmetry, intensity)
-	# test_X_all = prepare_X(raw_test_data)
+	# Extract features (bias, symmetry, intensity)
+	test_X_all = prepare_X(raw_test_data)
 
-	# # Filter for Class 1 and 2 with prepare_y
-	# test_y_all, test_idx = prepare_y(test_labels)
+	# Filter for Class 1 and 2 with prepare_y
+	test_y_all, test_idx = prepare_y(test_labels)
 
-	# # Apply filter to features and labels
-	# test_X = test_X_all[test_idx]
-	# test_y = test_y_all[test_idx]
+	# Apply filter to features and labels
+	test_X = test_X_all[test_idx]
+	test_y = test_y_all[test_idx]
 
-	# # Convert labels to -1 and 1
-	# test_y[test_y == 2] = -1
+	# Convert labels to -1 and 1
+	test_y[test_y == 2] = -1
 
-	# # Evaluate the best model
-	# test_acc = best_logisticR.score(test_X, test_y)
-	# print(f"Final Test Accuracy: {test_acc}")
+	# Evaluate the best model
+	test_acc = best_logisticR.score(test_X, test_y)
+	print(f"Final Test Accuracy: {test_acc}")
 
 	### END YOUR CODE
 
