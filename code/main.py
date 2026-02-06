@@ -393,6 +393,18 @@ def main():
 	# Use the 'best' model above to do testing.
 	### YOUR CODE HERE
 
+	print("--- Testing ---")
+	# Load the test data from file
+	raw_test, labels_test = load_data(os.path.join(data_dir, test_filename))
+
+	# Extract features (bias, symmetry, intensity)
+	test_X_all = prepare_X(raw_test)
+	test_y_all, _ = prepare_y(labels_test)   # for multiclass we keep ALL 0/1/2, no need to filter
+
+	# Evaluate the 'best model'
+	test_acc = best_logistic_multi_R.score(test_X_all, test_y_all)
+	print(f"Final Multiclass Test Accuracy: {test_acc}")
+
 	### END YOUR CODE
 
 
@@ -413,6 +425,17 @@ def main():
 	##### Hint: we suggest to set the convergence condition as "np.linalg.norm(gradients*1./batch_size) < 0.0005" or max_iter=10000:
 	### YOUR CODE HERE
 
+	# Initialize Softmax model with k=2
+	softmax_model = logistic_regression_multiclass(learning_rate=0.5, max_iter=10000, k=2)
+    
+    # Train using Mini-Batch Gradient Descent
+	softmax_model.fit_miniBGD(train_X, train_y, batch_size=20)
+    
+    # Evaluate
+	train_acc_soft = softmax_model.score(train_X, train_y)
+	valid_acc_soft = softmax_model.score(valid_X, valid_y)
+	print(f"Softmax (k=2) - Train Accuracy: {train_acc_soft}, Valid Accuracy: {valid_acc_soft}")
+
 	### END YOUR CODE
 
 
@@ -428,6 +451,10 @@ def main():
 	valid_y = valid_y_all[val_idx] 
 	#####       set lables to -1 and 1 for sigmoid classifer
 	### YOUR CODE HERE
+	
+    # Map 2 -> -1.
+	train_y[train_y == 2] = -1
+	valid_y[valid_y == 2] = -1
 
 	### END YOUR CODE 
 
@@ -435,11 +462,24 @@ def main():
 	##### Hint: we suggest to set the convergence condition as "np.linalg.norm(gradients*1./batch_size) < 0.0005" or max_iter=10000:
 	### YOUR CODE HERE
 
+	# Initialize Binary Logistic Regression model
+	sigmoid_model = logistic_regression(learning_rate=0.5, max_iter=10000)
+    
+    # Train using Mini-Batch Gradient Descent
+	sigmoid_model.fit_miniBGD(train_X, train_y, batch_size=20)
+    
+    # Evaluate
+	train_acc_sig = sigmoid_model.score(train_X, train_y)
+	valid_acc_sig = sigmoid_model.score(valid_X, valid_y)
+	print(f"Sigmoid (Binary) - Train Accuracy: {train_acc_sig}, Valid Accuracy: {valid_acc_sig}")
+
 	### END YOUR CODE
 
 
 	################Compare and report the observations/prediction accuracy
-
+	print("\n--- Comparison (Digits 1 vs 2) ---")
+	print(f"Softmax (k=2)  : train={train_acc_soft}, valid={valid_acc_soft}")
+	print(f"Sigmoid        : train={train_acc_sig}, valid={valid_acc_sig}")
 
 	# ------------End------------
 	
