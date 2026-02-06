@@ -61,6 +61,58 @@ def visualize_result(X, y, W):
 	'''
 	### YOUR CODE HERE
 
+	# Initialize plot
+	plt.figure(figsize=(8, 6))
+
+	# Separate the X data into 1 (digit 1) and -1 (digit 2) classes
+	X_pos = X[y == 1]
+	X_neg = X[y == -1]
+
+	# Plot positives (1) with 'o'
+	plt.scatter(X_pos[:, 0], X_pos[:, 1], color='blue', marker='o', label='Digit 1 (+1)')
+
+	# Plot negatives (-1) with 'x'
+	plt.scatter(X_neg[:, 0], X_neg[:, 1], color='red', marker='x', label='Digit 2 (-1)')
+
+	# Calculate the decision boundary
+	# The boundary is where w^T * x = 0 => w0 + w1*x1 + w2*x2 = 0
+
+	# Extract individual weights
+	# W contains 3 weights: W (Bias), W (Symmetry), W (Intensity)
+	if W.shape[0] == 3:
+		w0, w1, w2 = W
+	elif W.shape[0] == 2:
+		w0, w1, w2 = 0.0, W[0], W[1]
+	else:
+		raise ValueError(f"Unexpected W shape {W.shape}; expected length 2 or 3")
+
+	# Create a range of x-values (Symmetry) based on the data (to plot the boundary line)
+	x1_min, x1_max = np.min(X[:, 0]), np.max(X[:, 0])
+	x1_values = np.linspace(x1_min, x1_max, 100)
+
+	# Calculate corresponding x2 (Intensity) values
+	# solve for x2 (Intensity): x2 = -(w1*x1 + w0) / w2
+	eps = 1e-12
+	if abs(w2) < eps:
+        # Vertical-ish boundary: w0 + w1*x1 = 0
+		if abs(w1) > eps:
+			x1_boundary = -w0 / w1
+			plt.axvline(x=x1_boundary, linestyle='--', label='Decision boundary')
+	else:
+		x2_values = -(w0 + w1 * x1_values) / w2
+		# Plot the decision boundary
+		plt.plot(x1_values, x2_values, linestyle='--', label='Decision boundary')
+
+	# Add labels, legend, and save (Styling)
+	plt.xlabel('Symmetry')
+	plt.ylabel('Intensity')
+	plt.title('Logistic Regression: Training Data and Decision Boundary')
+	plt.ylim(np.min(X[:, 1]) - 0.5, np.max(X[:, 1]) + 0.5) # restrict y-axis to data range
+	plt.legend()
+	plt.grid(True)
+	plt.savefig('train_result_sigmoid.png')
+	plt.close()
+
 	### END YOUR CODE
 
 def visualize_result_multi(X, y, W):
@@ -148,6 +200,31 @@ def main():
 	# Explore different hyper-parameters.
 	### YOUR CODE HERE
 
+	# Define a search space
+	learning_rates = [0.01, 0.05, 0.1, 0.5, 1.0]
+	best_acc = 0			# Validation accuracy
+	best_logisticR = None	
+
+	print("--- Hyperparemeter Tuning ---")
+	# Iterate through hyperparameters to find the best model
+	for lr in learning_rates:
+		# Initialize model
+		model = logistic_regression(learning_rate=lr, max_iter=1000)
+
+		# Train on training set (using BGD first)
+		model.fit_BGD(train_X, train_y)
+
+		# Evaluate on validation set (NOT TEST SET)
+		val_acc = model.score(valid_X, valid_y)
+		print(f"Learning rate: {lr}, Validation accuracy: {val_acc}")
+
+		# Keep the best model
+		if val_acc > best_acc:
+			best_acc = val_acc
+			best_logisticR = model
+
+	print(f"Best validation accuracy: {best_acc} with LR: {best_logisticR.learning_rate}")
+
 	### END YOUR CODE
 
 	# Visualize the your 'best' model after training.
@@ -155,10 +232,34 @@ def main():
 
 	### YOUR CODE HERE
 
+	# Visualize the 'best' model after training
+	visualize_result(train_X[:, 1:3], train_y, best_logisticR.get_params())
+
 	### END YOUR CODE
 
 	# Use the 'best' model above to do testing. Note that the test data should be loaded and processed in the same way as the training data.
 	### YOUR CODE HERE
+
+	# print("--- Testing ---")
+	# # Load the test data from file
+	# raw_test_data, test_labels = load_data(os.path.join(data_dir, test_filename))
+
+	# # Extract features (bias, symmetry, intensity)
+	# test_X_all = prepare_X(raw_test_data)
+
+	# # Filter for Class 1 and 2 with prepare_y
+	# test_y_all, test_idx = prepare_y(test_labels)
+
+	# # Apply filter to features and labels
+	# test_X = test_X_all[test_idx]
+	# test_y = test_y_all[test_idx]
+
+	# # Convert labels to -1 and 1
+	# test_y[test_y == 2] = -1
+
+	# # Evaluate the best model
+	# test_acc = best_logisticR.score(test_X, test_y)
+	# print(f"Final Test Accuracy: {test_acc}")
 
 	### END YOUR CODE
 
