@@ -43,7 +43,7 @@ class logistic_regression_multiclass(object):
 
         # Convert labels to one-hot vectors
         y_one_hot = np.zeros((n_samples, self.k))       # matrix of 0s of shape (n_samples, k)
-        y_one_hot[np.arrange(n_samples), labels] = 1    # set index of label to 1
+        y_one_hot[np.arange(n_samples), labels] = 1    # set index of label to 1
 
         # Run miniBGD for a fized number of epochs (max_iter iterations)
         for _ in range(self.max_iter):

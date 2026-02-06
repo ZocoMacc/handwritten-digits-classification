@@ -130,6 +130,55 @@ def visualize_result_multi(X, y, W):
 	'''
 	### YOUR CODE HERE
 
+	# Initialize plot
+	plt.figure(figsize=(8, 6))
+
+	# Create grid
+	# Define the boundaries of the plot based on the data range. 
+	x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].max() + 0.5
+	y_min, y_max = X[:, 1].min() - 0.5, X[:, 1].max() + 0.5
+
+	# Generate a grid of points with some distance between then (h)
+	h = 0.02
+	xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+
+	# Prepare the grid for prediction
+	grid_points = np.c_[xx.ravel(), yy.ravel()]		# shape: (n_grid, 2)
+
+	# Add the bias term (1s column) to match shape of W
+	grid_points_bias = np.c_[np.ones(grid_points.shape), grid_points]	# shape: (n_grid, 3)
+
+	# Predict class for every grid point (s = X * W)
+	scores = np.dot(grid_points_bias, W)
+
+	# Select class with highest score
+	preds_grid = np.argmax(scores, axis=1)		# shape: (Ngrid,)
+
+	# Reshape predictions
+	preds_grid = preds_grid.reshape(xx.shape)	# shape: (grid_y, grid_x)
+
+	# Plot decision regions as backgrounds
+	plt.contourf(xx, yy, preds_grid, alpha=0.4, cmap=plt.cm.Paired)
+
+	# Plot training data points
+	colors = ['blue', 'red', 'green']
+	labels = ['Digit 0', 'Digit 1', 'Digit 2']
+
+	for i in range(3):
+		# Select points belonging to class i
+		idx = np.where(y == i)
+		plt.scatter(X[idx, 0], X[idx, 1], c=colors[i], label=labels[i], edgecolor='k', s=20)
+	
+	# Styling and save
+	plt.xlabel('Symmetry')
+	plt.ylabel('Intensity')
+	plt.title('Softmax Logistic Regression: Training Data and Decision Boundaries')
+	plt.legend()
+	plt.grid(True)
+
+	plt.savefig('train_result_softmax.png')
+	plt.close()
+
 	### END YOUR CODE
 
 def main():
@@ -295,6 +344,12 @@ def main():
 
 	# Explore different hyper-parameters.
 	### YOUR CODE HERE
+
+	print("\n--- Multiclass Hyperparameter Tuning ---")
+	learning_rates = [0.01, 0.05, 0.1, 0.5, 1.0]
+	
+
+
 
 	### END YOUR CODE
 
