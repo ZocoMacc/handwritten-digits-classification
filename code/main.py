@@ -21,12 +21,12 @@ def visualize_features(X, y):
 	'''
 	### YOUR CODE HERE
 	
+	# Initialize plot
+	plt.figure(figsize=(8, 6))
+
 	# Separate the X data into 1 (digit 1) and -1 (digit 2) classes
 	X_pos = X[y == 1]
 	X_neg = X[y == -1]
-
-	# Initialize plot
-	plt.figure(figsize=(8, 6))
 	
 	# Plot positives (1) with 'o'
 	plt.scatter(X_pos[:,0], X_pos[:, 1], color='blue', marker='o', label='Class +1')
@@ -133,23 +133,46 @@ def visualize_result_multi(X, y, W):
 	# Initialize plot
 	plt.figure(figsize=(8, 6))
 
-	# Create grid
-	# Define the boundaries of the plot based on the data range. 
-	x_min, x_max = X[:, 0].min() - 0.5, X[:, 0].max() + 0.5
-	y_min, y_max = X[:, 1].min() - 0.5, X[:, 1].max() + 0.5
+	# Separate the X data into digits 0, 1, and 2
+	X0 = X[y == 0]
+	X1 = X[y == 1]
+	X2 = X[y == 2]
 
-	# Generate a grid of points with some distance between then (h)
-	h = 0.02
-	xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
+	# Scatter points (3 classes)
+	plt.scatter(X0[:, 0], X0[:, 1], marker='o', label='Class 0')
+	plt.scatter(X1[:, 0], X1[:, 1], marker='x', label='Class 1')
+	plt.scatter(X2[:, 0], X2[:, 1], marker='^', label='Class 2')
+
+	# Create a grid over the 2D feature space
+	x1_min, x1_max = X[:, 0].min(), X[:, 0].max()
+	x2_min, x2_max = X[:, 1].min(), X[:, 1].max()
+
+	# Add padding so it is not ugly
+	pad1 = 0.05 * (x1_max - x1_min + 1e-12)
+	pad2 = 0.05 * (x2_max - x2_min + 1e-12)
+	x1_min, x1_max = x1_min - pad1, x1_max + pad1
+	x2_min, x2_max = x2_min - pad2, x2_max + pad2
+
+	# Resolution of the grid 
+	xx, yy = np.meshgrid(
+        np.linspace(x1_min, x1_max, 250),
+        np.linspace(x2_min, x2_max, 250)
+    )
 
 	# Prepare the grid for prediction
 	grid_points = np.c_[xx.ravel(), yy.ravel()]		# shape: (n_grid, 2)
 
-	# Add the bias term (1s column) to match shape of W
-	grid_points_bias = np.c_[np.ones(grid_points.shape), grid_points]	# shape: (n_grid, 3)
-
-	# Predict class for every grid point (s = X * W)
-	scores = np.dot(grid_points_bias, W)
+	# Include the bias feature: x_aug = [1, x1, x2] if needed
+	if W.shape[0] == 3:
+        # W includes bias row (create augmented grid points)
+		ones = np.ones((grid_points.shape[0], 1))
+		grid_aug = np.hstack([ones, grid_points])  # shape: (Ngrid, 3)
+		scores = grid_aug @ W                      # shape: (Ngrid, 3)
+	elif W.shape[0] == 2:
+        # No bias in W
+		scores = grid_points @ W                   # shape: (Ngrid, 3)
+	else:
+		raise ValueError(f"Unexpected W shape {W.shape}; expected (3,3) or (2,3).")
 
 	# Select class with highest score
 	preds_grid = np.argmax(scores, axis=1)		# shape: (Ngrid,)
@@ -158,16 +181,7 @@ def visualize_result_multi(X, y, W):
 	preds_grid = preds_grid.reshape(xx.shape)	# shape: (grid_y, grid_x)
 
 	# Plot decision regions as backgrounds
-	plt.contourf(xx, yy, preds_grid, alpha=0.4, cmap=plt.cm.Paired)
-
-	# Plot training data points
-	colors = ['blue', 'red', 'green']
-	labels = ['Digit 0', 'Digit 1', 'Digit 2']
-
-	for i in range(3):
-		# Select points belonging to class i
-		idx = np.where(y == i)
-		plt.scatter(X[idx, 0], X[idx, 1], c=colors[i], label=labels[i], edgecolor='k', s=20)
+	plt.contourf(xx, yy, preds_grid, alpha=0.4)
 	
 	# Styling and save
 	plt.xlabel('Symmetry')
@@ -285,7 +299,7 @@ def main():
 				best_logisticR = model
 				best_params = {'method': method, 'lr': lr}
 
-	print(f"\nBest Model: {best_params} with Accuracy: {best_acc}")
+	print(f"\nBest Sigmoid Model LR: {best_params} with Accuracy: {best_acc}")
 
 	### END YOUR CODE
 
@@ -345,16 +359,35 @@ def main():
 	# Explore different hyper-parameters.
 	### YOUR CODE HERE
 
+	# Define a search space (list of hyperparameters)
 	print("\n--- Multiclass Hyperparameter Tuning ---")
 	learning_rates = [0.01, 0.05, 0.1, 0.5, 1.0]
-	
+	best_multi_acc = -1
+	best_logistic_multi_R = None
 
+    # Search for the best Hyperparameters
+	for lr in learning_rates:
+        # Initialize the multiclass model 
+		model = logistic_regression_multiclass(learning_rate=lr, max_iter=1000, k=3)
 
+        # Train using Mini-Batch Gradient Descent
+		model.fit_miniBGD(train_X, train_y, batch_size=20)	# I put 20 just to match what I put on sigmoid
+
+        # Evaluate on the validation set (NOT TEST SET)
+		val_acc = model.score(valid_X, valid_y)
+		print(f"LR: {lr}, Validation accuracy: {val_acc}")
+
+        # Keep the best model
+		if val_acc > best_multi_acc:
+			best_multi_acc = val_acc
+			best_logistic_multi_R = model
+
+	print(f"Best Multiclass Model LR: {best_logistic_multi_R.learning_rate} with Accuracy: {best_multi_acc}")
 
 	### END YOUR CODE
 
 	# Visualize the your 'best' model after training.
-	# visualize_result_multi(train_X[:, 1:3], train_y, best_logistic_multi_R.get_params())
+	visualize_result_multi(train_X[:, 1:3], train_y, best_logistic_multi_R.get_params())
 
 
 	# Use the 'best' model above to do testing.

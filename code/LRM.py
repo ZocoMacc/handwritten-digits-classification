@@ -41,6 +41,9 @@ class logistic_regression_multiclass(object):
         # Initialize weights matrix to 0
         self.W = np.zeros((n_features, self.k))
 
+        # Convert labels to int for indexing
+        labels = labels.astype(int)
+
         # Convert labels to one-hot vectors
         y_one_hot = np.zeros((n_samples, self.k))       # matrix of 0s of shape (n_samples, k)
         y_one_hot[np.arange(n_samples), labels] = 1    # set index of label to 1
