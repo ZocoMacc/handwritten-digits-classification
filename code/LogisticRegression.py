@@ -214,6 +214,16 @@ class logistic_regression(object):
         """
 		### YOUR CODE HERE
 
+        # Compute the linear signal s = w^T * x
+        s = np.dot(X, self.W)
+
+        # Apply the threshold at 0.5 to get class lebales 
+        # Note: if w^T * x >= 0, then P(y=1|x) >= 0.5
+        preds = np.where(s >= 0, 1, -1)
+            # returns 1 when s >=0 and -1 otherwise
+
+        return preds
+
 		### END YOUR CODE
 
     def score(self, X, y):
