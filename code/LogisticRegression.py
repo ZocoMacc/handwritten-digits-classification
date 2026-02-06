@@ -238,6 +238,15 @@ class logistic_regression(object):
         """
 		### YOUR CODE HERE
 
+        # Predict labesl using the trained model
+        preds = self.predict(X)
+
+        # Compare predictions to true labels
+        score = np.mean(preds == y)
+            # converts boolean to 1 and 0, then gets the average
+        
+        return score
+
 		### END YOUR CODE
     
     def assign_weights(self, weights):
